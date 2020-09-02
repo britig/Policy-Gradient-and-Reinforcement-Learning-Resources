@@ -11,3 +11,6 @@ Contains useful links for Policy Gradient and Reinforcement Learning
 ## Step by step policy gradient - https://towardsdatascience.com/policy-gradient-step-by-step-ac34b629fd55
 
 ## Machine Learning 2020 roadmap - https://whimsical.com/CA7f3ykvXpnJ9Az32vYXva
+
+
+## Policy based RL the easy way - https://towardsdatascience.com/policy-based-reinforcement-learning-the-easy-way-8de9a3356083
