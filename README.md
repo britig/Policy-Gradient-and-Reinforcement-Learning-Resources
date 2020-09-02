@@ -8,3 +8,5 @@ Contains useful links for Policy Gradient and Reinforcement Learning
 
 ## Safety Gym (Safe RL) - https://openai.com/blog/safety-gym/
 
+## Step by step policy gradient - https://towardsdatascience.com/policy-gradient-step-by-step-ac34b629fd55
+
