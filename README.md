@@ -14,3 +14,5 @@ Contains useful links for Policy Gradient and Reinforcement Learning
 
 
 ## Policy based RL the easy way - https://towardsdatascience.com/policy-based-reinforcement-learning-the-easy-way-8de9a3356083
+
+## Tensorboard with Keras - https://www.machinecurve.com/index.php/2019/11/13/how-to-use-tensorboard-with-keras/
