@@ -17,3 +17,5 @@ Contains useful links for Policy Gradient and Reinforcement Learning
 
 ## Tensorboard with Keras - https://www.machinecurve.com/index.php/2019/11/13/how-to-use-tensorboard-with-keras/
 https://www.tensorflow.org/tensorboard/tensorboard_profiling_keras
+
+## Carla leaderboard - https://leaderboard.carla.org/get_started/
