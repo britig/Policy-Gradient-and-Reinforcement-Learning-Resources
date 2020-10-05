@@ -19,3 +19,4 @@ Contains useful links for Policy Gradient and Reinforcement Learning
 https://www.tensorflow.org/tensorboard/tensorboard_profiling_keras
 
 ## Carla leaderboard - https://leaderboard.carla.org/get_started/
+https://leaderboard.carla.org/
