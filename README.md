@@ -20,6 +20,3 @@ https://www.tensorflow.org/tensorboard/tensorboard_profiling_keras
 
 ## Carla leaderboard - https://leaderboard.carla.org/get_started/
 https://leaderboard.carla.org/
-
-
-![alt text](https://s3.ca-central-1.amazonaws.com/assets.jmir.org/assets/8b8b1a73126774033192eae2c4d64119.png)
