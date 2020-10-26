@@ -20,3 +20,5 @@ https://www.tensorflow.org/tensorboard/tensorboard_profiling_keras
 
 ## Carla leaderboard - https://leaderboard.carla.org/get_started/
 https://leaderboard.carla.org/
+
+## Pytorch Tutorial - https://www.youtube.com/watch?v=DbeIqrwb_dE&list=PLqnslRFeH2UrcDBWF5mfPGpqQDSta6VK4&index=3
