@@ -22,3 +22,5 @@ https://www.tensorflow.org/tensorboard/tensorboard_profiling_keras
 https://leaderboard.carla.org/
 
 ## Pytorch Tutorial - https://www.youtube.com/watch?v=DbeIqrwb_dE&list=PLqnslRFeH2UrcDBWF5mfPGpqQDSta6VK4&index=3
+
+## PPO for beginners :- https://medium.com/@eyyu/coding-ppo-from-scratch-with-pytorch-part-3-4-82081ea58146
