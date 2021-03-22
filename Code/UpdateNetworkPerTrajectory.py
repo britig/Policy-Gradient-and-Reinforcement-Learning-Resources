@@ -15,6 +15,10 @@ import torch.nn as nn
 from torch.optim import Adam
 from torch.distributions import MultivariateNormal
 from network import FeedForwardActorNN, FeedForwardCriticNN
+import pickle
+import Box2D
+from Box2D.b2 import * 
+from Box2D import *
 import sys
 
 
@@ -38,18 +42,18 @@ logger = {
 			'actor_network' : 0		# Actor network
 		}
 
-def update_policy(policy, critic, env, observation):
+def update_policy(policy_old, critic_old, policy_new, critic_new, env):
 	"""
 		The main learning function
 	"""
-	actor_optim = Adam(policy.parameters(), lr=0.005)
-	critic_optim = Adam(critic.parameters(), lr=0.005)
+	actor_optim = Adam(policy_old.parameters(), lr=0.005)
+	critic_optim = Adam(critic_old.parameters(), lr=0.005)
 	t_so_far = 0 # Timesteps simulated so far
 	i_so_far = 0 # Iterations ran so far
 	global logger
-	while t_so_far < 1000000:
+	while t_so_far < 2000000:
 		# Commence failure trajectory collection based on observation produced by BO
-		batch_obs, batch_acts, batch_log_probs, batch_rtgs, batch_lens = get_trajectory(policy,env,observation)
+		batch_obs, batch_acts, batch_log_probs, batch_rtgs, batch_lens = get_trajectory(policy_new,env)
 		# Calculate how many timesteps we collected this batch
 		t_so_far += np.sum(batch_lens)
 
@@ -61,21 +65,30 @@ def update_policy(policy, critic, env, observation):
 		logger['i_so_far'] = i_so_far
 
 		# Calculate advantage at k-th iteration
-		V, _ = evaluate(critic, policy, batch_obs, batch_acts)
+		V, _ = evaluate(critic_new, policy_new, batch_obs, batch_acts)
 		A_k = batch_rtgs - V.detach()
 
 		# Same as main PPO code
 		A_k = (A_k - A_k.mean()) / (A_k.std() + 1e-10)
 
+
+
+		print(f'A_k======================={A_k}')
+
 		if(len(batch_lens)!=0):
 			# This is the loop where we update our network for some n epochs
 			for _ in range(n_updates_per_iteration):
 				# Calculate V_phi and pi_theta(a_t | s_t)
-				V, curr_log_probs = evaluate(critic, policy, batch_obs, batch_acts)
+				V, curr_log_probs = evaluate(critic_new, policy_old, batch_obs, batch_acts)
+				#print(f'curr_log_probs======================={curr_log_probs}')
+				#print(f'batch_log_probs======================={batch_log_probs}')
 				ratios = torch.exp(curr_log_probs - batch_log_probs)
-				surr1 = ratios * A_k
-				surr2 = torch.clamp(ratios, 1 - 0.2, 1 + 0.2) * A_k
+				surr1 = ratios
+				#print(f'surr1======================={surr1}')
+				surr2 = torch.clamp(ratios, 1 - 0.2, 1 + 0.2)
+				#print(f'surr2======================={surr2}')
 				actor_loss = (-torch.min(surr1, surr2)).mean()
+				#print(f'actor_loss======================={actor_loss}')
 				critic_loss = nn.MSELoss()(V, batch_rtgs)
 
 
@@ -85,15 +98,20 @@ def update_policy(policy, critic, env, observation):
 				actor_loss.backward(retain_graph=True)
 				actor_optim.step()
 
+				# Calculate gradients and perform backward propagation for critic network
+				critic_optim.zero_grad()
+				critic_loss.backward()
+				critic_optim.step()
+
 				logger['actor_losses'].append(actor_loss.detach())
-				logger['actor_network'] = policy
+				logger['actor_network'] = policy_old
 
 			_log_summary()
 
-		torch.save(policy.state_dict(), './ppo_actor_updated.pth')
+		torch.save(policy_old.state_dict(), './ppo_actor_updated.pth')
 
 
-def get_trajectory(policy,env,observation):
+def get_trajectory(policy_new,env):
 	"""
 		This is where we collect the failure trajectories
 	"""
@@ -117,7 +135,21 @@ def get_trajectory(policy,env,observation):
 		ep_rews = [] # rewards collected per episode
 		obs = env.reset()
 		obs_ini = obs
-		env.env.lander.position[1] = env.env.lander.position[1]+observation
+		#Reset the environment to the failure state
+		with open('env_state.data', 'rb') as filehandle3:
+			# read env_state
+			env_state = pickle.load(filehandle3)
+			#Set the environment to the failure state, this will help in trajectory correction
+			#print(f'env_state ============= {env_state}')
+		with open('episode_observation.data', 'rb') as filehandle1:
+			# read episode_observation
+			episode_observation = pickle.load(filehandle1)
+		env.env.lander.position = b2Vec2(env_state[0],env_state[1]-18.12496176)
+		env.env.lander.linearVelocity = b2Vec2(env_state[2],env_state[3])
+		env.env.lander.angle = env_state[4]
+		env.env.lander.angularVelocity = env_state[5]
+		env.env.lander.position[1] = env.env.lander.position[1]+18.12496176
+		obs = episode_observation[0]
 		done = False
 		index = index + 1
 
@@ -132,7 +164,7 @@ def get_trajectory(policy,env,observation):
 
 			# Calculate action and make a step in the env. 
 			# Note that rew is short for reward.
-			action, log_prob = get_action(policy,obs)
+			action, log_prob = get_action(policy_new,obs)
 			obs, rew, done, _ = env.step(action)
 
 			# Track recent reward, action, and action log probability
@@ -148,25 +180,9 @@ def get_trajectory(policy,env,observation):
 		batch_lens.append(ep_t + 1)
 		batch_rews.append(ep_rews)
 
-		#If a negative reward policy was obtain
-		avg_trace_reward = [np.sum(ep_rews) for ep_rews in batch_rews[i]]
-		trace_batch_obs = []
-		trace_batch_acts = []
-		trace_batch_log_probs = []
-		trace_batch_rews = []
-		trace_batch_lens = []
-		obs = obs_ini
-		if(avg_trace_reward<0):
-			action, log_prob = get_action(policy,obs)
-			obs, rew, done, _ = env.step(action)
-
-
-	#print(f'batch_lens =========={batch_lens} batch_rews ========{batch_rews}')
-
 	number_of_negative_traces = 0
 	avg_rtgs = [np.sum(ep_rews) for ep_rews in batch_rews]
 	batch_rtgs = compute_rtgs(batch_rews).tolist()
-
 	index_to_remove = []
 	for i in range(len(avg_rtgs)):
 		# remove the negative traces from collected episode as we only want to update  
@@ -190,6 +206,7 @@ def get_trajectory(policy,env,observation):
 	batch_acts = torch.tensor(batch_acts, dtype=torch.float)
 	batch_rtgs = torch.tensor(batch_rtgs, dtype=torch.float)
 	batch_log_probs = torch.tensor(batch_log_probs, dtype=torch.float)
+	number_of_negative_traces = 0
 	avg_ep_rews = np.mean([np.sum(ep_rews) for ep_rews in batch_rews])
 
 
@@ -267,9 +284,11 @@ def compute_rtgs(batch_rews):
 
 	return batch_rtgs
 
-def get_action(policy, obs):
+
+#Sample the action distributions from the sub policy
+def get_action(policy_new, obs):
 	global cov_mat
-	mean = policy(obs)
+	mean = policy_new(obs)
 	dist = MultivariateNormal(mean, cov_mat)
 
 
@@ -315,7 +334,7 @@ def evaluate(critic, policy, batch_obs, batch_acts):
 
 
 
-def correct_policy(env, actor_model, critic_model, observation):
+def correct_policy(env, actor_model_old, critic_model_old,actor_model_new, critic_model_new, observation):
 	"""
 		Updates the policy model to correct the failure trajectories.
 		Parameters:
@@ -326,10 +345,10 @@ def correct_policy(env, actor_model, critic_model, observation):
 		Return:
 			None
 	"""
-	print(f"Correcting {actor_model} for observation {observation}", flush=True)
+	print(f"Correcting {actor_model_old} for observation {observation}", flush=True)
 
 	# If the actor model is not specified, then exit
-	if actor_model == '':
+	if actor_model_old == '':
 		print(f"Didn't specify model file. Exiting.", flush=True)
 		sys.exit(0)
 
@@ -338,16 +357,19 @@ def correct_policy(env, actor_model, critic_model, observation):
 	act_dim = env.action_space.shape[0]
 
 	# Build our policy and critic the same way we build our actor model in PPO
-	policy = FeedForwardNN(obs_dim, act_dim)
-	critic = FeedForwardNN(obs_dim, 1)
+	policy_old = FeedForwardActorNN(obs_dim, act_dim)
+	critic_old = FeedForwardCriticNN(obs_dim, 1)
+	policy_new = FeedForwardActorNN(obs_dim, act_dim)
+	critic_new = FeedForwardCriticNN(obs_dim, 1)
 
 	# Load in the actor model saved by the PPO algorithm
-	policy.load_state_dict(torch.load(actor_model))
-	critic.load_state_dict(torch.load(critic_model))
-	observation = 18.12496176
+	policy_old.load_state_dict(torch.load(actor_model_old))
+	critic_old.load_state_dict(torch.load(critic_model_old))
+	policy_new.load_state_dict(torch.load(actor_model_new))
+	critic_new.load_state_dict(torch.load(critic_model_new))
 
 	# Evaluate our policy with a separate module, eval_policy, to demonstrate
 	# that once we are done training the model/policy with ppo.py, we no longer need
 	# ppo.py since it only contains the training algorithm. The model/policy itself exists
 	# independently as a binary file that can be loaded in with torch.
-	update_policy(policy=policy, critic=critic, env=env ,observation=observation)
+	update_policy(policy_old=policy_old, critic_old=critic_old, policy_new=policy_new, critic_new=critic_new, env=env)

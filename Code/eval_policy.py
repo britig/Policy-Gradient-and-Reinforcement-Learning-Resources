@@ -208,9 +208,9 @@ def display(policy,critic,env):
 	action_unsafe = []
 	while not done:
 		env.render()
-		time.sleep(0.05)
 		env_state = [env.env.lander.position[0],env.env.lander.position[1],env.env.lander.linearVelocity[0],env.env.lander.linearVelocity[1],env.env.lander.angle,env.env.lander.angularVelocity]
 		action = policy(obs).detach().numpy()
+		time.sleep(0.1)
 		action_unsafe.append(action)
 		obs, rew, done, _ = env.step(action)
 		curr_val = int(critic(obs).detach().numpy())
@@ -218,15 +218,15 @@ def display(policy,critic,env):
 		print(f'Position ============= {env.env.lander.position}========= env.env.lander.linearVelocity ===== {env.env.lander.linearVelocity} ========= angle ===== {env.env.lander.angle}')
 		#Saddle point, this is from where we start correcting the actions 
 		if(env.env.lander.angle<-0.92):
-			break
-			print(f"angle is bad===={env.env.lander.angle}")
+			print(f'action unsafe============= {action_unsafe}')
+			'''print(f"angle is bad===={env.env.lander.angle}")
 			env.render()
 			time.sleep(0.1)
 			#Reset environment
-			'''env.env.lander.position = b2Vec2(env_state[0],env_state[1])
+			env.env.lander.position = b2Vec2(env_state[0],env_state[1])
 			env.env.lander.linearVelocity = b2Vec2(env_state[2],env_state[3])
 			env.env.lander.angle = env_state[4]
-			env.env.lander.angularVelocity = env_state[5]'''
+			env.env.lander.angularVelocity = env_state[5]
 			#Sample actions such that the current action gives a higher value for the next 
 			if env.env.lander.angle<-0.92 or env.env.lander.angle>0.92 :
 				action_new = [1,-1]
@@ -236,11 +236,8 @@ def display(policy,critic,env):
 			obs, rew, done, _ = env.step(action_new)
 			curr_val = int(critic(obs).detach().numpy())
 			print(f'action after sampling ============= {action_new}===new angle=={env.env.lander.angle}==== value ===== {int(curr_val)}')
-		with open('action_unsafe.data', 'wb') as filehandle1:
-			# store the observation data as binary data stream
-			pickle.dump(action_unsafe, filehandle1)
 		ep_ret += rew
-		prev_val = curr_val
+		prev_val = curr_val'''
 	print(f'Reward ============= {rew}')
 
 

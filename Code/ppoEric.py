@@ -131,14 +131,18 @@ class PPO:
 				ratios = torch.exp(curr_log_probs - batch_log_probs)
 
 				# Calculate surrogate losses.
+				#print(f'A_k======================={A_k}')
 				surr1 = ratios * A_k
+				#print(f'surr1======================={surr1}')
 				surr2 = torch.clamp(ratios, 1 - self.clip, 1 + self.clip) * A_k
+				#print(f'surr2======================={surr2}')
 
 				# Calculate actor and critic losses.
 				# NOTE: we take the negative min of the surrogate losses because we're trying to maximize
 				# the performance function, but Adam minimizes the loss. So minimizing the negative
 				# performance function maximizes it.
 				actor_loss = (-torch.min(surr1, surr2)).mean()
+				#print(f'actor_loss======================={actor_loss}')
 				critic_loss = nn.MSELoss()(V, batch_rtgs)
 
 				# Calculate gradients and perform backward propagation for actor network
@@ -160,8 +164,8 @@ class PPO:
 
 			# Save our model if it's time
 			if i_so_far % self.save_freq == 0:
-				torch.save(self.actor.state_dict(), './ppo_actor.pth')
-				torch.save(self.critic.state_dict(), './ppo_critic.pth')
+				torch.save(self.actor.state_dict(), './ppo_actordummy.pth')
+				torch.save(self.critic.state_dict(), './ppo_criticdummy.pth')
 
 	def rollout(self):
 		"""
@@ -196,24 +200,34 @@ class PPO:
 		# Keep simulating until we've run more than or equal to specified timesteps per batch
 		while t < self.timesteps_per_batch:
 			ep_rews = [] # rewards collected per episode
-
 			# Reset the environment. sNote that obs is short for observation. 
 			obs = self.env.reset()
-			with open('episode_observation.data', 'rb') as filehandle1:
-				# read episode_observation
-				episode_observation = pickle.load(filehandle1)
-			with open('episode_action.data', 'rb') as filehandle2:
-				# read episode_action
-				episode_action = pickle.load(filehandle2)
 			with open('env_state.data', 'rb') as filehandle3:
 				# read env_state
 				env_state = pickle.load(filehandle3)
 			#Set the environment to the failure state, this will help in trajectory correction
 			#print(f'env_state ============= {env_state}')
+			with open('episode_observation.data', 'rb') as filehandle1:
+				# read episode_observation
+				episode_observation = pickle.load(filehandle1)
+			'''obs_dim = env.observation_space.shape[0]
+			act_dim = env.action_space.shape[0]
+
+			# Build our policy the same way we build our actor model in PPO
+			policy = FeedForwardActorNN(obs_dim, act_dim)
+			policy.load_state_dict(torch.load('ppo_actor_LunarLandar.pth'))'''
+
+			#This section is for building the sub policy
 			env.env.lander.position = b2Vec2(env_state[0],env_state[1]-18.12496176)
 			env.env.lander.linearVelocity = b2Vec2(env_state[2],env_state[3])
 			env.env.lander.angle = env_state[4]
 			env.env.lander.angularVelocity = env_state[5]
+			env.env.lander.position[1] = env.env.lander.position[1]+18.12496176
+			obs = episode_observation[0]
+			'''while(env.env.lander.angle>-0.85):
+				action = policy(obs).detach().numpy()
+				#print(f'action==========={action}')
+				obs, rew, done, _ = env.step(action)'''
 			done = False
 
 			# Run an episode for a maximum of max_timesteps_per_episode timesteps
@@ -485,14 +499,14 @@ if __name__ == '__main__':
 	#print(f'Environment variables {env.env.lander.position}')
 	'''for attr in dir(env.env):
 		print("obj.%s = %r" % (attr, getattr(env.env, attr)))'''
-	#test(env,'ppo_actor.pth','ppo_critic.pth')
+	#test(env,'ppo_actor_updated.pth','ppo_critic.pth')
 	#bo_object = BO(bounds)
 	#bo_object.bayesian_optimization()
 
 	#Code for adversarial testing and uncovering failure traces
-	#start_state_bounds = [(-0.05, 0.05)]
+	#start_state_bounds- = [(-0.05, 0.05)]
 
 	"""Code to update the policy network after failure point is identified"""
-	#correct_policy(env,'ppo_actor_LunarLandar.pth','ppo_criticLunarLandar.pth',18.12496176)
+	#correct_policy(env,'ppo_actor_LunarLandar.pth','ppo_criticLunarLandar.pth','ppo_actor.pth','ppo_critic.pth',18.12496176)
 
 
