@@ -26,3 +26,5 @@ https://leaderboard.carla.org/
 ## PPO for beginners :- https://medium.com/@eyyu/coding-ppo-from-scratch-with-pytorch-part-3-4-82081ea58146
 
 ## A Really nice Policy Gradient Tutorial :- https://www.youtube.com/watch?v=cQfOQcpYRzE
+
+## Python Simulink Integration :- https://medium.com/@soutrikbandyopadhyay/controlling-a-simulink-model-by-a-python-controller-2b67bde744ee
