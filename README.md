@@ -28,3 +28,5 @@ https://leaderboard.carla.org/
 ## A Really nice Policy Gradient Tutorial :- https://www.youtube.com/watch?v=cQfOQcpYRzE
 
 ## Python Simulink Integration :- https://medium.com/@soutrikbandyopadhyay/controlling-a-simulink-model-by-a-python-controller-2b67bde744ee
+
+## Types of RL methods : https://smartlabai.medium.com/reinforcement-learning-algorithms-an-intuitive-overview-904e2dff5bbc
