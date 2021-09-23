@@ -30,3 +30,5 @@ https://leaderboard.carla.org/
 ## Python Simulink Integration :- https://medium.com/@soutrikbandyopadhyay/controlling-a-simulink-model-by-a-python-controller-2b67bde744ee
 
 ## Types of RL methods : https://smartlabai.medium.com/reinforcement-learning-algorithms-an-intuitive-overview-904e2dff5bbc
+
+## A blog on RL : https://towardsdatascience.com/crystal-clear-reinforcement-learning-7e6c1541365e
