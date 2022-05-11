@@ -32,3 +32,5 @@ https://leaderboard.carla.org/
 ## Types of RL methods : https://smartlabai.medium.com/reinforcement-learning-algorithms-an-intuitive-overview-904e2dff5bbc
 
 ## A blog on RL : https://towardsdatascience.com/crystal-clear-reinforcement-learning-7e6c1541365e
+
+## Problems with reward functions : https://towardsdatascience.com/how-learning-reward-functions-can-go-wrong-6e794e42f4fc
