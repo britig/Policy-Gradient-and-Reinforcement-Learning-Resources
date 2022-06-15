@@ -34,3 +34,5 @@ https://leaderboard.carla.org/
 ## A blog on RL : https://towardsdatascience.com/crystal-clear-reinforcement-learning-7e6c1541365e
 
 ## Problems with reward functions : https://towardsdatascience.com/how-learning-reward-functions-can-go-wrong-6e794e42f4fc
+
+## PPO Hacks : https://iclr-blog-track.github.io/2022/03/25/ppo-implementation-details/
