@@ -36,3 +36,5 @@ https://leaderboard.carla.org/
 ## Problems with reward functions : https://towardsdatascience.com/how-learning-reward-functions-can-go-wrong-6e794e42f4fc
 
 ## PPO Hacks : https://iclr-blog-track.github.io/2022/03/25/ppo-implementation-details/
+
+## Pytorch Tutorials : https://www.youtube.com/playlist?list=PLhhyoLH6IjfxeoooqP9rhU3HJIAVAJ3Vz
